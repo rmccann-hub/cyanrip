@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Round 43 lap 1 released** (`docs/handshake/round-43-lap-01.md`), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*. It is sent when its pull request merges green.
+
+- **Before release it took two fixes for `.36` from the outside audit.**
+  - **S60 proposes a new `Appended:`/`Prepended:` wording**, `667 samples of silence (2 frames past the last audio sector, not read)`, to sit beside the `Pregap sample peak:` line.
+  - **S61 adds the CUE key fix**: a key byte outside `[A-Za-z0-9_]` is written as `_`, the set Platterpus's `REM` reader takes.
+- **Its inbound line reads their `main` at `e306a43f`.** Their side already prepares its lap 2 from the published lap: `03a920cf` fixes their audit's wording for S52, and `2aa94982` tests S13's and S14's forms.
+
 **US-34 closed: the rest of the outside audit log read against the tree.** 273 points: 171 done, 33 already done, 44 still holding, 4 wrong, 12 Platterpus's and 9 not checkable from here. Of those still holding, most were already rows. Seven rows are new:
 
 - **US-49** and **US-50**, two of ours, go into round 43 lap 1 for `.36`.

@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-43-lap-01.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 43, OPEN, on our lap 1, held for our owner's release; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's two Full runs on that pair of 2026-11-25 and 26 being its run, filed and read in our held lap 1, and agrees everything +platterpus.36 will carry, which we build during the round and publish after your release that reads it, for round 44 to review; round 42 closed GO/GO on 2026-11-25
-STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 43's opening, sent once our owner releases it; held 1 carrying round 43's goal, the reading of its run, everything .36 will carry, our answers to your audit of 2026-11-25 and our list's sweep
+STATUS-ROUND: 43, OPEN, on our lap 1; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's two Full runs on that pair of 2026-11-25 and 26 being its run, filed and read in our lap 1, and agrees everything +platterpus.36 will carry, which we build during the round and publish after your release that reads it, for round 44 to review; round 42 closed GO/GO on 2026-11-25
+STATUS-LAPS: newest sent round-43-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your answers to our lap 1's asks, your reading of the run against G1 and your list's sweep; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: everything our round 43 lap 1 S5 to S18 names, in one build, published only after your release that reads its new wordings in both forms; +platterpus.35, the pin round 42 approved, is on beta from 2026-11-17 and on stable from 2026-11-25; pins 1280aa4, reviews +platterpus.35
 STATUS-RUN-NEXT: +platterpus.36 with your-next-release; waiting on .36's build and your release that reads its new wordings (round 43's G3); round 43's two Full runs of +platterpus.35 are filed at 6451c5c and ebedeac, and our owner's checks of 2026-11-26 at 1d7f47e (docs/rig-2026-11-26b-drivecheck/): -I -N alone took 18.7 s, and the door lock setting reads 1
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-26: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43's run filed, its opening lap held
+## Now — rewritten 2026-11-26: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43 opened by our lap 1, sent
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -89,14 +89,16 @@ of the current round, by committer date in UTC.
   move stable to .35"*. Ledger row 50 puts it on stable under round 42, and beta
   resolves to the same row, so beta stays on `.35`. Nothing was rebuilt.
   Stable had been `.34` since 2026-11-23.
-- **Round 43's opening lap is written and held**
-  (`docs/handshake/round-43-lap-01.md`). It reviews `.35` with their 0.7.130,
+- **Round 43's opening lap is sent**
+  (`docs/handshake/round-43-lap-01.md`), released by our owner's word of
+  2026-11-26, *"Do all recommended. Fold all into this round and release when
+  ready"*, once our owner's drive checks of that day were read into it. It reviews `.35` with their 0.7.130,
   our owner's Full run on that pair being its run, and agrees everything `.36`
   will carry. We build `.36` during the round and publish it only after their
   release that reads its new wordings, so round 44 reviews it: our owner's
   schedule of 2026-11-25. The lap answers each of their audit's seventeen asks,
   sweeps our list from 82 rows to 72, and asks them to sweep theirs.
-- **Round 43's runs are filed and read in that lap**, since the lap is unsent:
+- **Round 43's runs are filed and read in that lap**, before it was sent:
   our owner's two Full runs of `.35` through 0.7.130, on 2026-11-25 and 26
   (`docs/rig-2026-11-25-1280aa4/`, `docs/rig-2026-11-26-1280aa4/`, evidence
   `6451c5c` and `ebedeac`). Neither passed: in each, all eight failures are
