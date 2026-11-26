@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Our owner's drive checks of 2026-11-26 filed** (`docs/rig-2026-11-26b-drivecheck/`, evidence `1d7f47e`, 9 files and rows).
+
+- **US-44 closed, not ours.** Alone on the reference disc, `.35`'s `-I -N` took 18.7 s and named no wait. The minutes of 2026-11-25 were a drive `cd-paranoia -A` was timing at the same time.
+- **HW-20.** Its silent solo read did not recur; what held the earlier ones is still not known, and the ripping container has no `strace` for a trace.
+- **R43-4.** The kernel's door lock setting reads `1`, on a drive that can lock its tray.
+- **`STATUS.md`'s next run** is `.36`'s, for round 44.
+
 **US-20 closed: the README states ReplayGain's memory as measured.** A 74-minute image of white noise, FLAC's worst case at 725 MB of output, ripped from `.35`'s source peaked at 905.3 MiB resident at the defaults and 161.6 MiB with `-K` (`ru_maxrss` of the cyanrip process). `SETTLED.md`'s resource row gains the method it lacked; US-20's other lead was closed on 2026-11-25.
 
 **Round 43's second run filed and read** (`docs/rig-2026-11-26-1280aa4/`, evidence `ebedeac`, 228 files and manifest rows). It is our owner's second Full acceptance of `.35` through Platterpus 0.7.130, on 2026-11-26 from 00:58:46Z.
