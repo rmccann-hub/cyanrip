@@ -3,11 +3,11 @@
 STATUS-NEWEST-LAP: round-43-lap-01.md
 STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 43, OPEN, on our lap 1, held for our owner's release; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's Full run on that pair being its run, and agrees everything +platterpus.36 will carry, which we build during the round and publish after your release that reads it, for round 44 to review; round 42 closed GO/GO on 2026-11-25
-STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 43's opening, sent once our owner releases it; held 1 carrying round 43's goal, everything .36 will carry, our answers to your audit of 2026-11-25 and our list's sweep
+STATUS-ROUND: 43, OPEN, on our lap 1, held for our owner's release; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's Full run on that pair of 2026-11-25 being its run, filed and read in our held lap 1, and agrees everything +platterpus.36 will carry, which we build during the round and publish after your release that reads it, for round 44 to review; round 42 closed GO/GO on 2026-11-25
+STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 43's opening, sent once our owner releases it; held 1 carrying round 43's goal, the reading of its run, everything .36 will carry, our answers to your audit of 2026-11-25 and our list's sweep
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: everything our round 43 lap 1 S5 to S18 names, in one build, published only after your release that reads its new wordings in both forms; +platterpus.35, the pin round 42 approved, is on beta from 2026-11-17 and on stable from 2026-11-25; pins 1280aa4, reviews +platterpus.35
-STATUS-RUN-NEXT: +platterpus.35 with 0.7.130; waiting on our owner's rig session for round 43's run: the Full acceptance on that pair, `time cyanrip -I -N -d /dev/sr0` alone on the disc of 2026-11-25 (US-44), the cache check with the drive to itself (R43-12), and `cat /proc/sys/dev/cdrom/lock` (R43-4)
+STATUS-RUN-NEXT: +platterpus.35 with 0.7.130; waiting on our owner's two checks round 43's run left: `time cyanrip -I -N -d /dev/sr0` alone on the reference disc (US-44) and `cat /proc/sys/dev/cdrom/lock` (R43-4); the Full acceptance on that pair ran on 2026-11-25 and is filed at 6451c5c (docs/rig-2026-11-25-1280aa4/), its cache probe and cd-paranoia -A each with the drive to itself (R43-12)
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: counted from LBA 0, proposed in our round 32 lap 1 S13 and accepted in your lap 2 S10, released in +platterpus.23 at 891c79e; the reference disc's track 1 starts at LSN 0, so no run of it can tell the two counts apart, and a disc with a pregap before track 1 is what settles it (docs/OPEN-ITEMS.md HW-11)
 STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame outside the disc is read once, a refused one written as silence, and a track that read any says Beyond disc: N of M frames refused (written as silence); released in +platterpus.24 at 93afa15; on 2026-11-17 your overreadprobe ran it under +platterpus.34 on the BDR-209D, which refused 2 of 2 frames past the lead-out and 2 of 2 before LSN 0, each read once and written as silence in about a minute (docs/rig-2026-11-17b-overreadprobe/), so it stays open only for a drive that answers past its lead-out (docs/OPEN-ITEMS.md HW-10)
 STATUS-OPEN: subchannel-pregap-varies us fixing at 8726bd3, priority 5: a pregap the TOC does not signal read differently between rips of one disc while the log stated one value; fixed by placing each Q frame at the sector its own address names (316682e), with every search's counts in Pregap searches: (8726bd3, +platterpus.27 and .28), and since +platterpus.29 the one sector the reads leave undecided prints as such: track 9 is 94 or 95 frames (undecided) in 18 of the 19 .29 logs of 2026-11-04 and 26 of round 40's 29 rip logs, 95 in the rest, and 94 in no log since .29; this drive's raw Q of LSN 145567 fails its CRC, so a raw read on a second drive settles it (our round 39 lap 1 S11; docs/OPEN-ITEMS.md HW-6; the record is docs/KNOWN-ISSUES.md)
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-25: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43's opening lap held
+## Now — rewritten 2026-11-26: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43's run filed, its opening lap held
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -96,6 +96,12 @@ of the current round, by committer date in UTC.
   release that reads its new wordings, so round 44 reviews it: our owner's
   schedule of 2026-11-25. The lap answers each of their audit's seventeen asks,
   sweeps our list from 82 rows to 72, and asks them to sweep theirs.
+- **Round 43's run is filed and read in that lap**, since the lap is unsent:
+  our owner's Full run of `.35` through 0.7.130 on 2026-11-25
+  (`docs/rig-2026-11-25-1280aa4/`, evidence `6451c5c`). It did not pass: all
+  eight failures are Platterpus's album audit failing a `.35` binary their
+  production target built without our release declaration (R43-13). Nothing
+  in it is a defect in `.35`.
 - **Round 41 is closed**, 2026-11-18, approving `.34` at `fb28088`, and it and
   every earlier round is a row of the handshake README's round table; the gate
   is the authority over all of them.
@@ -104,9 +110,9 @@ of the current round, by committer date in UTC.
 
 | | |
 |---|---|
-| newest | **`.35` with Platterpus 0.7.129, Full, the reference disc, twice: 2026-11-23 from 23:49:48Z and 2026-11-24 from 09:38:25Z**, round 42's runs, each with 29 rips; the first pass 647, fail 2, unreachable 1, and the second pass 650, fail 1, unreachable 1, every failure your `expect-ctdb whole` on track 5's minority CTDB match. All 68 logs verify and end `Ripping errors: 0`; all 56 `.35` logs print `Disc MCN:       none (libcdio returned none)`. Each run's section F rip verifies 13 tracks from the read and track 5 by your labeled CTDB repair, as round 41's did, and the second run's repeat rip 4 verifies all 14 from the drive's reads, its securing pass keeping `C96464AB` for track 5 over three reads of `E0036697`. Filed on our evidence branch at `fa045e5` (`docs/rig-2026-11-23-1280aa4/`, from the session and rip folders, the bundle being pruned) and `c55c217` (`docs/rig-2026-11-24-1280aa4/`, from the bundle and rip folders) |
-| before | **Your C2 probe with Platterpus's drive test, the BDR-209D and the reference disc, 2026-11-24**, run to the end twice, from 16:04:26Z and 23:38:36Z: 67 reads after a cache flush each time, three at each window over track 5's second 144, track 3's 240, 244, 245, 251 and 252, track 1's 162 and a control; C2 bits at track 5's LBA 83430 in 5 of 6 reads, at track 3's seconds 251 and 252 in some reads and not others, and none elsewhere; the `14h` read again gives block error byte `38h` at 83430; the solo `cyanrip -I -N` of `.35` printed `Opening drive...` and nothing more in 300 s, twice; filed on our evidence branch at `b263e0e` (`docs/rig-2026-11-24b-c2probe/`), its stopped first try at `f04dac5` (`docs/rig-2026-11-24-c2probe-stopped/`) |
-| next | **none for round 42**; round 43's goal names the next run |
+| newest | **`.35` with Platterpus 0.7.130, Full, the reference disc, 2026-11-25 from 20:24:17Z**, round 43's run, 17 rips: pass 531, fail 8, unreachable 128, so it did not pass. Every failure is your `expect-album-audit` on `-- NOT a released build`: the binary on the rig was built without `-Ddeclare_released=true`, which your production target withholds (R43-13), where round 42's 42 `.35` logs say `released build`. 127 of the 128 unreachable steps are the A/B sections, skipped because your pin and build under review are both `1280aa4`, and the 128th is the offset refusal this drive cannot reach. All 17 logs verify and end `Ripping errors: 0` and `Read stalls:    none`; section F verifies 13 tracks from reads and track 3 by your labeled CTDB repair; repeat rips 2 and 3 verify all 14 from the drive's reads; `--reread-until-accuraterip` kept `C96464AB` for track 5 in 5 of 8 repeat loops; track 9's pregap is undecided in 4 of 24 `Gaps:` lists. Filed on our evidence branch at `6451c5c` (`docs/rig-2026-11-25-1280aa4/`) |
+| before | **`.35` with Platterpus 0.7.129, Full, the reference disc, twice: 2026-11-23 from 23:49:48Z and 2026-11-24 from 09:38:25Z**, round 42's runs, each with 29 rips; the first pass 647, fail 2, unreachable 1, and the second pass 650, fail 1, unreachable 1, every failure your `expect-ctdb whole` on track 5's minority CTDB match. All 68 logs verify and end `Ripping errors: 0`; all 56 `.35` logs print `Disc MCN:       none (libcdio returned none)`. Each run's section F rip verifies 13 tracks from the read and track 5 by your labeled CTDB repair, as round 41's did, and the second run's repeat rip 4 verifies all 14 from the drive's reads, its securing pass keeping `C96464AB` for track 5 over three reads of `E0036697`. Filed on our evidence branch at `fa045e5` (`docs/rig-2026-11-23-1280aa4/`, from the session and rip folders, the bundle being pruned) and `c55c217` (`docs/rig-2026-11-24-1280aa4/`, from the bundle and rip folders) |
+| next | **none for round 43's G1**, which this run answers; the two checks in `STATUS-RUN-NEXT`, then `.36`'s acceptance run for round 44 |
 
 Every earlier run is a `docs/rig-*` folder with its own README.
 

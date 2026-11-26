@@ -5,6 +5,10 @@
 report a cache verdict we recognise, so it was recorded as unknown rather than guessed."*
 The log covers the BDR-209D and a disc other than the reference disc: MusicBrainz disc ID
 `pNtImOkdBm9RMBIalzx0w9cfsYY-`, CDDB `E20DFE0E`, which MusicBrainz knows (4 candidates).
+**Corrected 2026-11-26**: it is the reference disc. Round 42's two Full runs read the same
+disc ID, CDDB ID and AccurateRip ID `001d420f-013bb370-e20dfe0e`
+(`docs/rig-2026-11-24-1280aa4/`), as does round 43's run (`docs/rig-2026-11-25-1280aa4/`).
+The four candidates are MusicBrainz releases of it: round 42 used one, this log another.
 
 **The log's clock is local time, UTC−5.** Build `d15c0ff` (0.7.130) did not exist until
 2026-11-25 16:31Z, yet the log shows it starting at `14:17:46`. The app logs filed in
@@ -69,7 +73,8 @@ lines that write them (`docs/rig-2026-11-24b-c2probe/`). Times below give both.
   disc in MusicBrainz by `14:23:14`, but the log does not say what that re-read ran.
 - **When cd-paranoia started, or who started it.** No line records its start. The
   automatic check declined at `14:20:09`, and debug logging was off.
-- **Anything about the reference disc.**
+- ~~**Anything about the reference disc.**~~ **Corrected 2026-11-26**: this is the reference
+  disc (above), on a drive `cd-paranoia -A` was timing at the same time.
 
 ## Questions, gaps and next time
 
