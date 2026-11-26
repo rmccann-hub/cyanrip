@@ -740,10 +740,12 @@ work good — thoroughness, adversarial reading, finding one more thing — are
 exactly the ones that keep it open. These rules are load-bearing and a gate
 should refuse or warn on each.
 
-**R1 — Close conditions are fixed in lap 1 and cannot grow.** A criterion
-discovered later belongs to the *next* round, unless it is a regression in the
-pin under review. Otherwise the finish line moves every time either side is
-thorough.
+**R1 — Close conditions are fixed when lap 1 is sent, and change only by both
+sides' word.** Until lap 1 is sent they change like any of its text (§4a).
+After it, a criterion found later belongs to the *next* round, unless it is a
+regression in the pin under review, or one side's lap proposes it as a change to
+the close and the other side's next lap accepts it by name (v11). Otherwise the
+finish line moves every time either side is thorough.
 
 **R2 — `HANDSHAKE-CLOSE-BY` is set in lap 1 and is not extended.** It is an
 **ISO 8601 instant** (`2026-08-22T23:59:59Z`) — never a bare date, which names
@@ -892,6 +894,11 @@ line the consumer matches keeps round 20's order**, the consumer's release
 that reads both wordings first. A hotfix is the release most likely to be
 written quickly, which is when a reworded line is least likely to be checked
 against what the consumer matches.
+
+**R11 — One builder per request (v11).** A request the operator gives both
+sessions names the side that builds it. When it does not, `OWNERSHIP.md`'s split
+decides; where that does not, neither side builds until the operator names one,
+and the session that notices asks.
 
 ## 6a-ter. Overrides — the operator may break any rule, in writing (v3)
 
@@ -1836,10 +1843,10 @@ closes under v9; v10 governs from round 42, and `seam-rules.md` v9 and
 ## 19. Changes in v11
 
 **v11 is v10 plus a heading that sets this history apart, the rule for a
-corrected README, a qualifier beneath each arm of `Handshake:`, Platterpus's
-two rules in `seam-rules.md`, and what cyanrip's `.36` changes in
-`seam-commands.md`, and nothing else.** cyanrip's round 43 lap 1 proposed
-it, S18, S34 and S54.
+corrected README, a qualifier beneath each arm of `Handshake:`, R1 amended and
+a new R11, Platterpus's two rules in `seam-rules.md`, and what cyanrip's `.36`
+changes in `seam-commands.md`, and nothing else.** cyanrip's round 43 lap 1
+proposed it, S18, S34, S54, S58 and S59.
 
 - **The change history, set apart** (S34): Platterpus's audit of 2026-11-25,
   F16, asked that §10 onward move to an appendix with §8 unmoved. It already
@@ -1862,6 +1869,13 @@ it, S18, S34 and S54.
   withdrawn. The arms are unchanged, since a reader matching `released build`
   would take a renamed one as released, and every Platterpus release since
   round 10 folds such a line into the one above it.
+- **R1, amended** (S58): close conditions are fixed when lap 1 is sent, and a
+  criterion found later joins the round when one side's lap proposes it and the
+  other's next lap accepts it by name. R1 had been overridden in rounds 25 to
+  28, 35, 38 and 41; the week review of 2026-11-10 asked that a rule overridden
+  two rounds running go up for amendment.
+- **R11, one builder per request** (S59): the same review's point 4, after both
+  sides built a drive-test runner for one request of 2026-11-05.
 - **`seam-rules.md` v10** adds S-19 and S-20, each in the words of the
   Platterpus lap that proposed it and accepted in a cyanrip lap; its §5 says
   which.
@@ -1891,8 +1905,8 @@ v10 with it.
 
 ### What v11 does not do
 
-- It does not change §4's vocabulary, §5's close, or any conformance row, and
-  it adds no field.
+- It does not change §4's vocabulary or any conformance row, and it adds no
+  field; §5's close is unchanged but for R1's amendment.
 - It edits no file already sent, and no word of §10 to §18.
 - It takes no rule whose wording no lap has agreed: an amendment of R1, which
   a review of 2026-11-10 asked both sides to agree, and the three gaps

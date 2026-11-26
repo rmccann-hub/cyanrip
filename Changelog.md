@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Held round 43 lap 1 folds in every item we recommended** (S56 to S61), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*.
+
+- **US-37, the week review's three process points.** Point 1 is already R8 point 3 (S57). R1 is amended so close conditions are fixed when lap 1 is sent and grow only by both sides' word (S58); it had been overridden in rounds 25 to 28, 35, 38 and 41. A new R11 says a request the operator gives both sessions names its builder (S59). Both go into the v11 draft, with `CHANGES.md` rows P7 and P8, its line references remapped by diff and the draft's hash updated.
+- **US-21, `Pregap sample peak:`.** It is a part-2 wording for `.36` (S60), in G3. Platterpus's `624835a7` already reads it, and HW-21 is new for a disc that has such a span.
+- **US-30, US-43 and US-29.** These are part-1 work for `.36` (S61): a missing teardown, the contract's progress-line row, and an HEVC cover tested and, if it cannot be saved, refused before any read.
+- **The close.** S62's G2 and G3 grow by those asks, and the close and Diagnostics move to S62 to S73.
+
 **Held round 43 lap 1 proposes US-48's fix for `.36`, not round 44** (S54), on our owner's question of 2026-11-26, *"Why wait, why not put it in this lap / round since it's not released yet?"*. Neither reason for waiting held. Platterpus's R249 settles which builds print the arm. A renamed arm would need their reader first, but a qualifier beneath it does not: every Platterpus since round 10 folds an indented parenthetical into the line above. So `.36` keeps `-- NOT a released build` and prints beneath it `(not declared at build time; whether this commit was published is not checked by cyanrip)`, or `(declared at build time, withdrawn: git reported changes in the tree)`. S54 joins G2, and the v11 draft's §7 and §19 say so (`draft-shared-v11/CHANGES.md` P6, its line references and `PROTOCOL.md` hash updated).
 
 **The round 43 run README's unreachable count, corrected, dated**: 127 of its 128 `unreachable` steps are Platterpus's A/B sections, and the 128th is the offset refusal (L625), which this drive cannot reach. It lands now because `tools/evidence.py verify-rows` holds a README to its filed bytes only in the pull request that adds its row, #140.
