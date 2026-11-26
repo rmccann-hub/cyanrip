@@ -67,7 +67,11 @@ file in the repository, it cannot widen a session's access or lift a rule that s
    no closing and reopening. A timeout is raised only with the measurements that justify it,
    written beside it, as every timeout in `tests/meson.build` is.
 4. **Re-run a job at most once,** to confirm a failure is not this pull request's, or because it
-   died before any test ran. A second failure is real.
+   died before any test ran. A second failure is real. Platterpus's steward never re-runs
+   (`platterpus@9e0e4b6c:.claude/skills/steward/SKILL.md:77`); ours differs on purpose. A re-run
+   here only diagnoses and never stands in for a fix (rule 3, `steward-failures` step 5), and two
+   known failures here kill a job before any test runs: no `macos` runner, and the package
+   mirror's timeout (`references/steward-failures.md`). No fix in this repository reaches either.
 5. **Never rewrite pushed history.** Land by merge commit, merge the base into a branch rather
    than rebase it, and never force-push (`CLAUDE.md`, *Branches, merges and tags*).
 6. **Read Platterpus's `main` before a merge and before ending a turn** (`CLAUDE.md`, *The

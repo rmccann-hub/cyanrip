@@ -671,9 +671,17 @@ test('Lap commit list names its range', python,
 ## every lap we have sent, 51 then, and 24.5 s once those checks ran a few at
 ## a time, 25.8 s two at a time. CI's macOS runner took it to 95.3 s on
 ## 2026-10-29.
+## 240 s since 2026-11-26: CI's macOS runner killed it at 120.04 s on PR
+## #142's head, f1a41f9e, in a job where Settled facts took 78.8 s, against
+## 88.52 s and 57.8 s for the two on platterpus-fork's 8173d473 that morning:
+## a runner 1.36 times slower, and 95.3 s times 1.36 is 130 s. The test had
+## not grown there (95.3 s, then 88.52 s). Here it is 31.4 s alone with 76
+## laps of ours, 12.6 s of them the re-checks and most of the rest about 200
+## refusal cases a process each, and 71.9 s in the full suite. A lap we send
+## adds about 0.17 s here.
 test('Lap statements are well formed', python,
      args: [ files('lap_statements.py') ],
-     timeout: 120)
+     timeout: 240)
 
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])

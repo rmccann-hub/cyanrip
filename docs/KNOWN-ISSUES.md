@@ -682,7 +682,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: thirty-eight of them**, derived
+session that produced a `Cache probe:` line is here now: thirty-nine of them**, derived
 by scanning `docs/rig-*/session/transcript.txt`, and since round 42 an in-app bundle's
 `scriptrun/transcript.txt`, rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
@@ -732,6 +732,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-11-23 `1280aa4` | 362.5 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.6 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-11-24 `1280aa4` | 362.6 ms | 1.5 ms | **6 ms** | 25%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.7 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-11-25 `1280aa4` | 237.8 ms | 1.6 ms | **6 ms** | 27%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.3 ms or more, beside `cd-paranoia -A`'s 137 |
+| 2026-11-26 `1280aa4` | 245.1 ms | 1.6 ms | **6 ms** | 27%; `128 to 255 sectors`, three re-reads after 256 sectors at 30.3 ms or more, beside `cd-paranoia -A`'s 137 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -739,10 +740,10 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, thirty-eight times. "A cached read of a
-few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen twenty-two
-times, in the seventeenth to the thirty-eighth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
-1.5, 1.3, 1.4, 1.7, 2.0, 1.3, 1.2, 1.4, 1.2, 1.3, 1.4, 1.3, 1.3, 1.4, 1.5 and 1.6 ms,
+**Hundreds of ms uncached: confirmed, thirty-nine times. "A cached read of a
+few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen twenty-three
+times, in the seventeenth to the thirty-ninth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
+1.5, 1.3, 1.4, 1.7, 2.0, 1.3, 1.2, 1.4, 1.2, 1.3, 1.4, 1.3, 1.3, 1.4, 1.5, 1.6 and 1.6 ms,
 each after a run inside the cache. This said "eighteen" and "twice" for five days after the
 nineteenth row was added, the stale tally this section is about, found adding
 the twentieth. It then said "twenty-two" and "six" from 2026-10-20, when the

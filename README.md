@@ -378,6 +378,8 @@ ReplayGain
 ----------
 cyanrip will automatically compute ReplayGain tags and add them to all files while ripping. Note, that this requires to hold all **compressed** audio data for the entire CD in RAM while ripping, which may be from 300 to 600 megabytes, depending on the output used. Low-power and low-RAM devices can turn this off via the `-K` switch, along with [AcoustID](#acoustid) fingerprinting via `-B`, which needs the same.
 
+Measured on this fork on 2026-11-26, from the source of `+platterpus.35`: ripping a 74-minute disc image of white noise to FLAC, the worst case at 725 MB of output, peaked at 905 MiB resident at the defaults and 162 MiB with `-K` (`ru_maxrss` of the cyanrip process). Music compresses further than noise, so it needs less.
+
 The tags generated are ReplayGain 2.0 compliant, which is backwards-compatible with ReplayGain 1.0. The **true peak** value is calculated and used.
 
 AcoustID

@@ -20,3 +20,23 @@ stand now.
 a history file, and a record beats any later summary of it. A generated file
 that disagrees with its generator is stale and fails a check. Fix the
 summary, never the record.
+
+## The `evidence` branch
+
+An orphan branch holding the files a record cites but this branch does not carry: each rig
+session's files, Platterpus's bundles as delivered, and the outside reviews.
+- **What it holds:** folders under `docs/`, each named as the record that cites it, such as
+  `docs/rig-2026-11-25-1280aa4/`, whose README stays here as its index.
+- **How it is indexed:** `evidence-manifest.tsv` here, one row per file with its size, sha256 and
+  the evidence commit that added it. `tools/evidence.py verify-rows`, run by CI's `evidence`
+  job, checks each new row against its file at that commit.
+- **How it changes:** it only gains commits. Files are added by `tools/evidence.py file`, never
+  edited; rulesets block deleting and force-pushing it, and nothing is tagged on it. A filed
+  README is corrected here, on the default branch, dated; the evidence branch keeps the filed
+  bytes.
+- **How to read it:** `tools/evidence.py fetch --branch`, then `tools/evidence.py cat <path>`;
+  nothing else reads an evidence path (`tests/evidence_readers.py`).
+
+The branch has no README at its root, and that is deliberate (our US-36, from the week review
+of 2026-11-10): every file there has a manifest row only the filing tool writes, and a root file
+would be the one without one. This section is that README.

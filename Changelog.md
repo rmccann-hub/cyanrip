@@ -1,10 +1,73 @@
 Unreleased
 ==========
+**`Lap statements are well formed` gets 240 s.** CI's macOS runner killed it at 120.04 s on PR #142. On `platterpus-fork`'s head the same morning it passed there in 88.52 s.
+
+- **The runner, not the test.** The failing job ran 1.36 times slower throughout: `Settled facts` took 78.8 s there against 57.8 s.
+- **The test had not grown on macOS:** 95.3 s on 2026-10-29, 88.52 s on 2026-11-26.
+- **Here** it is 31.4 s alone and 71.9 s in the full suite.
+- **Recorded** beside the test, and as a known failure in the steward's table.
+
+**Round 43 lap 1 released** (`docs/handshake/round-43-lap-01.md`), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*. It is sent when its pull request merges green.
+
+- **Before release it took two fixes for `.36` from the outside audit.**
+  - **S60 proposes a new `Appended:`/`Prepended:` wording**, `667 samples of silence (2 frames past the last audio sector, not read)`, to sit beside the `Pregap sample peak:` line.
+  - **S61 adds the CUE key fix**: a key byte outside `[A-Za-z0-9_]` is written as `_`, the set Platterpus's `REM` reader takes.
+- **S4 answers Platterpus's order of releases**, relayed by our owner on 2026-11-26.
+  - **Agreed through step 5:** 0.7.131 mid-round once the wordings settle; `.36` built last and published after it.
+  - **Not agreed: steps 6 and 7.** Under R8 point 3 the Full run on `.36` with 0.7.131 is round 44's run, not round 43's close.
+  - **Not yet true:** their readers do not yet take S60's `Appended:` in samples.
+- **Its inbound line reads their `main` at `e306a43f`.** Their side already prepares its lap 2 from the published lap: `03a920cf` fixes their audit's wording for S52, and `2aa94982` tests S13's and S14's forms.
+
+**US-34 closed: the rest of the outside audit log read against the tree.** 273 points: 171 done, 33 already done, 44 still holding, 4 wrong, 12 Platterpus's and 9 not checkable from here. Of those still holding, most were already rows. Seven rows are new:
+
+- **US-49** and **US-50**, two of ours, go into round 43 lap 1 for `.36`.
+  - **US-49.** A metadata key reaches the CUE sheet raw, so a quote or newline in an `-a` key breaks its `REM` line. Reproduced on the current build.
+  - **US-50.** `Appended:` says `2 frames of silence` for 667 samples, and the earlier of those two frames is mostly disc audio.
+- **US-51 to US-53:** the ReplayGain peak tag, untimed tool calls, and the libcdio-paranoia minimum.
+- **OW-12** and **OW-13**, for the owner: stale repository settings and four process questions.
+- **UP-5** and **UP-6:** upstream's copies of US-49 and US-50.
+
+Two of the audit's points were wrong:
+
+- **`Rip completed:` divides by the disc's track count by design.** Platterpus reads it as the disc total (`platterpus@728d4f9e:src/platterpus/parsers/cyanrip_log.py:2814-2821`).
+- **Running the black-box sweep beside other tests (A1)** was declined on 2026-11-16.
+
+Dumbass us left `docs/history/README.md` pointing at PP-15 for a day after closing it. It now says where the answer is.
+
+**Our owner's drive checks of 2026-11-26 filed** (`docs/rig-2026-11-26b-drivecheck/`, evidence `1d7f47e`, 9 files and rows).
+
+- **US-44 closed, not ours.** Alone on the reference disc, `.35`'s `-I -N` took 18.7 s and named no wait. The minutes of 2026-11-25 were a drive `cd-paranoia -A` was timing at the same time.
+- **HW-20.** Its silent solo read did not recur; what held the earlier ones is still not known, and the ripping container has no `strace` for a trace.
+- **R43-4.** The kernel's door lock setting reads `1`, on a drive that can lock its tray.
+- **`STATUS.md`'s next run** is `.36`'s, for round 44.
+
+**US-20 closed: the README states ReplayGain's memory as measured.** A 74-minute image of white noise, FLAC's worst case at 725 MB of output, ripped from `.35`'s source peaked at 905.3 MiB resident at the defaults and 161.6 MiB with `-K` (`ru_maxrss` of the cyanrip process). `SETTLED.md`'s resource row gains the method it lacked; US-20's other lead was closed on 2026-11-25.
+
+**Round 43's second run filed and read** (`docs/rig-2026-11-26-1280aa4/`, evidence `ebedeac`, 228 files and manifest rows). It is our owner's second Full acceptance of `.35` through Platterpus 0.7.130, on 2026-11-26 from 00:58:46Z.
+
+- **The verdict.** Step for step the first run's: pass 531, fail 8, unreachable 128. Every failure is again Platterpus's audit on `-- NOT a released build` (R43-13).
+- **Track 3 differs.** No read of 158, 112 of them Platterpus's re-reads of it alone, is matched by AccurateRip v1 or v2. Their CTDB repair rewrote it in all seven whole-disc rips, where the first run read `59D352DD`, which AccurateRip matches, in two.
+- **Track 5.** `--reread-until-accuraterip` kept `C96464AB` in all 7 of its loops.
+- **The records.** The cache table gains its thirty-ninth row, and HW-6, HW-19 and `STATUS.md` count both runs.
+
+**US-36 closed: `docs/README.md` now describes the `evidence` branch**: what it holds, how it is indexed, how it changes and how to read it. The branch keeps no root README, deliberately: every file there has a manifest row only the filing tool writes, and a root file would be the one without one.
+
+**US-39 closed: the steward says why its one re-run differs from Platterpus's never.** Ours is deliberate: a re-run here only diagnoses and never stands in for a fix. Two known failures here kill a job before any test runs, no `macos` runner and the package mirror's timeout, which no fix in this repository reaches (`.claude/skills/steward/SKILL.md` rule 4).
+
+**Held round 43 lap 1 folds in every item we recommended** (S56 to S61), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*.
+
+- **US-37, the week review's three process points.** Point 1 is already R8 point 3 (S57). R1 is amended so close conditions are fixed when lap 1 is sent and grow only by both sides' word (S58); it had been overridden in rounds 25 to 28, 35, 38 and 41. A new R11 says a request the operator gives both sessions names its builder (S59). Both go into the v11 draft, with `CHANGES.md` rows P7 and P8, its line references remapped by diff and the draft's hash updated.
+- **US-21, `Pregap sample peak:`.** It is a part-2 wording for `.36` (S60), in G3. Platterpus's `624835a7` already reads it, and HW-21 is new for a disc that has such a span.
+- **US-30, US-43 and US-29.** These are part-1 work for `.36` (S61): a missing teardown, the contract's progress-line row, and an HEVC cover tested and, if it cannot be saved, refused before any read.
+- **The close.** S62's G2 and G3 grow by those asks, and the close and Diagnostics move to S62 to S73.
+
+**Held round 43 lap 1 proposes US-48's fix for `.36`, not round 44** (S54), on our owner's question of 2026-11-26, *"Why wait, why not put it in this lap / round since it's not released yet?"*. Neither reason for waiting held. Platterpus's R249 settles which builds print the arm. A renamed arm would need their reader first, but a qualifier beneath it does not: every Platterpus since round 10 folds an indented parenthetical into the line above. So `.36` keeps `-- NOT a released build` and prints beneath it `(not declared at build time; whether this commit was published is not checked by cyanrip)`, or `(declared at build time, withdrawn: git reported changes in the tree)`. S54 joins G2, and the v11 draft's §7 and §19 say so (`draft-shared-v11/CHANGES.md` P6, its line references and `PROTOCOL.md` hash updated).
+
 **The round 43 run README's unreachable count, corrected, dated**: 127 of its 128 `unreachable` steps are Platterpus's A/B sections, and the 128th is the offset refusal (L625), which this drive cannot reach. It lands now because `tools/evidence.py verify-rows` holds a README to its filed bytes only in the pull request that adds its row, #140.
 
 **The golden reference and the interrupted sample regenerated for held round 43
 lap 1's reading of its run**: their `Handshake:` line is unchanged, and the build tag moves.
-They were **generated by `b1705233`** and committed in `96520a12`; regenerated after the lap noted Platterpus's R249, they were **generated by `fe47b905`** and **committed in the commit carrying this sentence**.
+They were **generated by `b1705233`** and committed in `96520a12`; regenerated after the lap noted Platterpus's R249, they were generated by `fe47b905` and committed in `aa5c7059`; regenerated after the lap proposed US-48's qualifier, they were generated by `b7f11ec1` and committed in `f1a41f9e`; regenerated after the lap folded in our owner's items and read the second run, they were generated by `d35d9d91` and committed in `04460101`; regenerated after the lap read our owner's drive checks, they were generated by `dbd6a24d` and committed in `759e736d`; regenerated when the lap was released, they were generated by `28ccd0c0` and committed in `c319e57b`; regenerated after S4 answered Platterpus's order of releases, they were **generated by `5d913e98`** and **committed in the commit carrying this sentence**.
 
 **Held round 43 lap 1 reads its run** (S48 to S55), since it is not yet sent: what `.35` read, the eight failures of Platterpus's album audit on an undeclared build of their own production target, the ask which half they change, our US-48, and G1 as we read it, met. The close and Diagnostics move to S56 to S67; nothing outside the lap cites them. S38 no longer calls the 2026-11-25 read another disc.
 
