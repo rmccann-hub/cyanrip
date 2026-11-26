@@ -1846,7 +1846,8 @@ closes under v9; v10 governs from round 42, and `seam-rules.md` v9 and
 corrected README, a qualifier beneath each arm of `Handshake:`, R1 amended and
 a new R11, Platterpus's two rules in `seam-rules.md`, and what cyanrip's `.36`
 changes in `seam-commands.md`, and nothing else.** cyanrip's round 43 lap 1
-proposed it, S18, S34, S54, S58 and S59.
+proposed it, S18, S34, S54, S58 and S59, and Platterpus's lap 2 accepted it,
+S10, S13, S16 and S17, giving its own cell of `seam-commands.md` §2a in S14.
 
 - **The change history, set apart** (S34): Platterpus's audit of 2026-11-25,
   F16, asked that §10 onward move to an appendix with §8 unmoved. It already
@@ -1886,8 +1887,9 @@ proposed it, S18, S34, S54, S58 and S59.
   - §1b gains `--overwrite-existing`, which `.36` accepts and ignores
     (cyanrip's round 42 lap 1 S21, Platterpus's lap 2 S12);
   - §2a's two cyanrip cells that read `?`, the `.cue`'s track numbering and
-    the `.log`'s `Album:` line, say what `.35` does; the Platterpus cell
-    beside the second stays Platterpus's;
+    the `.log`'s `Album:` line, say what `.35` does, and the Platterpus
+    cell beside the second says what Platterpus does, in its words
+    (Platterpus's round 43 lap 2 S14);
   - §1's `--prefer-disc-isrc` row says the flag is accepted and ignored from
     `.35` (cyanrip's round 41 lap 3 S22, Platterpus's lap 4 S14), and that
     a code that is not an ISO 3901 code is written to no file, from `.25`
@@ -1908,10 +1910,15 @@ v10 with it.
 - It does not change §4's vocabulary or any conformance row, and it adds no
   field; §5's close is unchanged but for R1's amendment.
 - It edits no file already sent, and no word of §10 to §18.
-- It takes no rule whose wording no lap has agreed: an amendment of R1, which
-  a review of 2026-11-10 asked both sides to agree, and the three gaps
+- It takes no rule whose wording no lap has agreed: the three gaps
   cyanrip lists as its known issues 13 to 15 (nothing asks a gate to check
   the peer's transcription of its own verdict; nothing says whether
   `HANDSHAKE-OUR-VERSION` names the build under test or the build declaring
   the verdict; and the wordings Platterpus's round 30 lap 6 S23 listed as
   imprecise) wait for one.
+- It does not say how a row of `docs/evidence-manifest.tsv` names the
+  commit that corrected a README: HR-2 point 4's five columns have no place
+  for it, and no lap says which column would, whether a path may have a
+  second row, or which copy's bytes and SHA-256 a row gives. Until a lap of
+  each side agrees those, neither side's checker enforces that half of the
+  rule, and the correction is dated in the README itself.

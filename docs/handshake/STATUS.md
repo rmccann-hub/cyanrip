@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-43-lap-01.md
+STATUS-NEWEST-LAP: round-43-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 43, OPEN, on our lap 1; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's two Full runs on that pair of 2026-11-25 and 26 being its run, filed and read in our lap 1, and agrees everything +platterpus.36 will carry, which we build during the round and publish after your release that reads it, for round 44 to review; round 42 closed GO/GO on 2026-11-25
-STATUS-LAPS: newest sent round-43-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your answers to our lap 1's asks, your reading of the run against G1 and your list's sweep; you write it, and only you do; held none
+STATUS-ROUND: 43, OPEN, on our lap 3 and your lap 2, both OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's two Full runs on that pair of 2026-11-25 and 26 being its run; your lap 2 accepts every +platterpus.36 wording and our lap 1 S62 as given, and reads G1, G2 and G5 as met; G3 waits on your 0.7.131 and G4 on S18's shared version landing in both trees with +platterpus.36's build, which we publish after your 0.7.131, for round 44 to review; round 42 closed GO/GO on 2026-11-25
+STATUS-LAPS: newest sent round-43-lap-03.md (ours), round-43-lap-02.md (theirs); next 4 (theirs) carrying your reading of our lap 3 S5's version against its hashes, and your 0.7.131 once published; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: everything our round 43 lap 1 S5 to S18 names, in one build, published only after your release that reads its new wordings in both forms; +platterpus.35, the pin round 42 approved, is on beta from 2026-11-17 and on stable from 2026-11-25; pins 1280aa4, reviews +platterpus.35
 STATUS-RUN-NEXT: +platterpus.36 with your-next-release; waiting on .36's build and your release that reads its new wordings (round 43's G3); round 43's two Full runs of +platterpus.35 are filed at 6451c5c and ebedeac, and our owner's checks of 2026-11-26 at 1d7f47e (docs/rig-2026-11-26b-drivecheck/): -I -N alone took 18.7 s, and the door lock setting reads 1
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-26: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43 opened by our lap 1, sent
+## Now — rewritten 2026-11-26: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43 on our lap 3, sent
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -98,6 +98,14 @@ of the current round, by committer date in UTC.
   release that reads its new wordings, so round 44 reviews it: our owner's
   schedule of 2026-11-25. The lap answers each of their audit's seventeen asks,
   sweeps our list from 82 rows to 72, and asks them to sweep theirs.
+- **Their lap 2 accepts it all, and our lap 3 answers.** Their lap 2
+  (`docs/handshake/inbound/round-43-lap-02.md`) accepts every `.36` wording,
+  S4's order and S62 as given, and reads G1, G2 and G5 as met. Our lap 3
+  (`docs/handshake/round-43-lap-03.md`) confirms the wordings, adds US-54 and
+  US-55 for `.36`, and sends S18's version: `PROTOCOL.md` v11 and
+  `seam-rules.md` v10 final by hash, and `seam-commands.md`, whose hash
+  follows `.36`'s build. G3 waits on their 0.7.131, and G4 on that version
+  landing in both trees.
 - **Round 43's runs are filed and read in that lap**, before it was sent:
   our owner's two Full runs of `.35` through 0.7.130, on 2026-11-25 and 26
   (`docs/rig-2026-11-25-1280aa4/`, `docs/rig-2026-11-26-1280aa4/`, evidence
