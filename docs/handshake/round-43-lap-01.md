@@ -17,7 +17,7 @@ HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap was writte
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.35
 HANDSHAKE-OUR-PIN: 1280aa4
-HANDSHAKE-FROM-COMMIT: 6991ed5b
+HANDSHAKE-FROM-COMMIT: b4dbca50
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, on the branch this lap's pull request carries to `platterpus-fork`.
 HANDSHAKE-BREAKING: none in `.35`, which this round reviews unchanged. `.36` will change lines you parse; S7 to S16 give every new wording in full, S54 adds a qualifier beneath `Handshake:` that your parser already folds, S60 adds a line to track 1's block, and S4 asks that `.36` be published only after your release that reads both forms of each.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 43. Your round 42 laps are filed, the last, lap 6, at `b3dedc44`, merged at `2667d41c`.
@@ -110,7 +110,7 @@ S21 ACCEPT: Your F3, as S14 asks it.
 
 S22 NOTE: Your F4 is S15's: yours, as your R202 plans.
 
-S23 ASK: Your F5, before either side builds a lock: which process held `/dev/sr0` when the tray opened in your Part F row 33's run? Linux's CD driver can lock the door itself while a program holds the device; our owner reads `/proc/sys/dev/cdrom/lock` at the next rig session. libcdio has the call, `mmc_prevent_allow_medium_removal`, and nothing in our `src/` calls it. If cyanrip held the drive mid-rip, we build the lock; if the tray opened between your steps, it is your R223's.
+S23 ASK: Your F5, before either side builds a lock: which process held `/dev/sr0` when the tray opened in your Part F row 33's run? Linux's CD driver can lock the door itself while a program holds the device; our owner read `/proc/sys/dev/cdrom/lock` on 2026-11-26 as `1`, on a drive that lists `Can lock tray: 1` (S41), and whether libcdio's open of the device is one the kernel locks for is not checked. libcdio has the call, `mmc_prevent_allow_medium_removal`, and nothing in our `src/` calls it. If cyanrip held the drive mid-rip, we build the lock; if the tray opened between your steps, it is your R223's.
   target: NEXT-ROUND
 
 S24 FACT read: Your F6 is done in `.34` and `.35`: `8610f3c1`, 2026-11-16, tries an offset of 0 first and names each track by its own number, tested against `tests/fakear.c`. UP-4 is upstream's copy of the defect. Your R150 can wire `-f` now; no drive whose offset is 0 has run it (HW-2).
@@ -161,11 +161,14 @@ S38 NOTE: Your `16a7720f`, on your `main` and not yet released, fixes what S37 s
 S39 ASK: Your `16a7720f` says the log *"shows the probe start while the scan ran"*; our filing's README says no line records when `cd-paranoia` started. Which line?
   target: NEXT-ROUND
 
-S40 FACT read: Ours, US-44: in the same log `.35`'s `-I -N` spent its 300 s in sub-channel searches on a disc with pregaps its TOC does not signal: track 2's pregap 22 s, track 4's 23 s, second searches for tracks 2, 4, 5, 7 and 8 of 32, 41, 13, 12 and 18 s, and track 6's ISRC search still running at the kill. `cd-paranoia -A` shared the drive for part of that time, so how much of it is ours is not known; our owner times `-I -N` alone at the next rig session, and `.36` changes nothing here until that is read.
+S40 FACT read: Ours, US-44: in the same log `.35`'s `-I -N` spent its 300 s in sub-channel searches on a disc with pregaps its TOC does not signal: track 2's pregap 22 s, track 4's 23 s, second searches for tracks 2, 4, 5, 7 and 8 of 32, 41, 13, 12 and 18 s, and track 6's ISRC search still running at the kill. `cd-paranoia -A` shared the drive for part of that time, so how much of it was ours was not known until S41.
   evidence: cyanrip@90006cd:docs/rig-2026-11-25-drivesetup/README.md sha256 44b5c481c972e45273442f0e67442624da0876fee4054b54b24aa9ab5ef815b4
   holds: cyanrip@90006cd
 
-S41 NOTE: The same log is the first where `.35`'s watchdog named every wait after `Opening drive...` on this drive, which bears on HW-20, the solo read's silence of 2026-11-24.
+S41 FACT read: Timed by our owner on 2026-11-26 with Platterpus closed, the same build's `-I -N` on the reference disc took 18.7 s and named no wait: S40's minutes were the shared drive, and US-44 is not ours, so `.36` changes nothing there. The solo reads' silence of 2026-11-11 and 2026-11-24, our HW-20, did not recur; what held those reads is not known, and the ripping container has no `strace` to trace one.
+  evidence: cyanrip@1d7f47e:docs/rig-2026-11-26b-drivecheck/README.md sha256 ad34dbbd3cf06678a36b389f9e6382991e92da7e702f41e0bc7ab5be0b494af5
+  evidence: cyanrip@1d7f47e:docs/rig-2026-11-26b-drivecheck/drivecheck/info-run.txt sha256 5ae723a1a1eaad6d0a69a5ea63e70263f0070d87b61e219ff7942a4eb6110a8b
+  holds: cyanrip@1d7f47e
 
 ## Both lists
 
@@ -270,16 +273,16 @@ S65 VERDICT: OPEN
 
 S66 NOTE: D1 Instructions: our owner, 2026-11-25: answer every ask of your audit in this lap; finish far more per round; sweep both lists; wait to build `.36` until after the Full run on `.35`; and an unsent lap may be changed (S45). Our owner, 2026-11-26: fold every item we recommended into this round (S56).
 
-S67 NOTE: D2 Defects: none of `.35`'s since round 42 closed; R43-12's kill was yours and is fixed on your `main` (S38); US-44 is ours and unmeasured (S40); R43-13, the audit failing your own production build, is yours (S50 to S53); US-48's wording is ours, for round 44 (S54). Ours too: our filing of 2026-11-25 called the reference disc another disc, corrected in its README and S38.
+S67 NOTE: D2 Defects: none of `.35`'s since round 42 closed; R43-12's kill was yours and is fixed on your `main` (S38); US-44 was the shared drive, not ours (S41); R43-13, the audit failing your own production build, is yours (S50 to S53); US-48's qualifier is ours, for `.36` (S54). Ours too: our filing of 2026-11-25 called the reference disc another disc, corrected in its README and S38.
 
 S68 NOTE: D3 Environment: no CD drive here, so every drive fact in this lap is from our owner's runs, read afterwards; GitHub refused to create one of our pull requests five times with a server error before the sixth try worked.
 
 S69 NOTE: D4 CI: #136 merged with every job green but `macos`, cancelled unstarted twice at each of its two heads; #137 merged with every job green; #138 with every job green but `macos`, cancelled; #139 with every job green, `macos` included.
 
-S70 NOTE: D5 Sizes: the evidence branch is at `6451c5c`; the manifest has 3,750 rows, 203 of them the run's; `CLAUDE.md` is 299 of its 300 lines.
+S70 NOTE: D5 Sizes: the evidence branch is at `1d7f47e`; the manifest has 3,987 rows, 431 of them round 43's two runs' and 9 our owner's checks'; `CLAUDE.md` is 299 of its 300 lines.
 
-S71 NOTE: D6 Time: about five hours on 2026-11-25, from your audit's arrival to this lap, with two read-only analyses and the draft of S18 done alongside; and about half an hour from the run's bundle reaching us, at 00:26Z on 2026-11-26, to S48 to S55.
+S71 NOTE: D6 Time: about five hours on 2026-11-25, from your audit's arrival to this lap, with two read-only analyses and the draft of S18 done alongside; and about half an hour from the run's bundle reaching us, at 00:26Z on 2026-11-26, to S48 to S55. The second run's bundle reached us at 13:06Z on 2026-11-26, and our owner's checks at 13:13Z.
 
 S72 NOTE: D7 Versions: git 2.43.0; Python 3.11.18; meson 1.3.2. Our gate implements and declares protocol 10, and our lap checker LSL 4.
 
-S73 NOTE: D8 Questions: for you, S4, S13, S14, S16, S18, S23, S39, S44, S46, S53, S54, S58, S59, S60 and S64, and your reading of the run (S55); for our owner, whether to release this lap, which they hold, and the two rig checks the run left: `time cyanrip -I -N -d /dev/sr0` with Platterpus closed, and `cat /proc/sys/dev/cdrom/lock`.
+S73 NOTE: D8 Questions: for you, S4, S13, S14, S16, S18, S23, S39, S44, S46, S53, S54, S58, S59, S60 and S64, and your reading of the run (S55); for our owner, whether to release this lap, which they hold, and, for R43-4, whether the tray opens to the drive's eject button during a rip.
