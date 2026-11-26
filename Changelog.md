@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**`Lap statements are well formed` gets 240 s.** CI's macOS runner killed it at 120.04 s on PR #142. On `platterpus-fork`'s head the same morning it passed there in 88.52 s.
+
+- **The runner, not the test.** The failing job ran 1.36 times slower throughout: `Settled facts` took 78.8 s there against 57.8 s.
+- **The test had not grown on macOS:** 95.3 s on 2026-10-29, 88.52 s on 2026-11-26.
+- **Here** it is 31.4 s alone and 71.9 s in the full suite.
+- **Recorded** beside the test, and as a known failure in the steward's table.
+
 **Round 43 lap 1 released** (`docs/handshake/round-43-lap-01.md`), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*. It is sent when its pull request merges green.
 
 - **Before release it took two fixes for `.36` from the outside audit.**
