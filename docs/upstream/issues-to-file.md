@@ -1,16 +1,16 @@
-# 33 upstream issues for cyanreg/cyanrip, ready to paste
+# 35 upstream issues for cyanreg/cyanrip, ready to paste
 
-**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `20b3b88be277ab6f`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
+**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `16cffd5375e9281c`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
 
 **Links were resolved against upstream's `master` at `648b1dd`**, our mirror's tip when this was rendered: a commit it reaches links to upstream, and any other commit our history reaches links to the fork. `--check` renders against that commit, not against what a clone's `master` holds, so every clone holding it gives the same answer; `git fetch origin master` brings it.
 
-**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 33 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
+**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 35 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
 
 **How to file.** For each item: open <https://github.com/cyanreg/cyanrip/issues/new>, paste the **Title** line into the title box and everything between the two `BODY` markers into the body. File them in order: item 5 refers to item 4, so once item 4 is filed you can replace *"item 4 of this set"* in item 5 with its issue link. Before filing, a quick search of upstream's open issues for each title's key words avoids a duplicate; this list was not checked against their tracker.
 
 **Suggested order of importance**, if you file only some: 6 (apostrophes corrupt metadata on real rips), 8 (disc images rip corrupted audio with `Ripping errors: 0`), 19 (with libcdio 2.3.0 or later, every image rip without `-s` stops at `Offset is unset!`), 1 and 2 (a hung or cut-off process with the drive held), 4 and 5 (`-H` silently drops de-emphasis and the log claims it), then the rest.
 
-## Item 1 of 33
+## Item 1 of 35
 
 **Title:** The signal handler calls `cyanrip_log()`, which is not async-signal-safe
 
@@ -47,7 +47,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 <!-- BODY END -->
 
-## Item 2 of 33
+## Item 2 of 35
 
 **Title:** SIGTERM is not handled at all
 
@@ -74,7 +74,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 <!-- BODY END -->
 
-## Item 3 of 33
+## Item 3 of 35
 
 **Title:** `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
 
@@ -106,7 +106,7 @@ state").
 
 <!-- BODY END -->
 
-## Item 4 of 33
+## Item 4 of 35
 
 **Title:** The filter graph is a ternary cascade, so `-H` discards de-emphasis
 
@@ -135,7 +135,7 @@ de-emphasis").
 
 <!-- BODY END -->
 
-## Item 5 of 33
+## Item 5 of 35
 
 **Title:** `(deemphasis applied)` is printed from the settings, not from what happened
 
@@ -160,7 +160,7 @@ fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://gi
 
 <!-- BODY END -->
 
-## Item 6 of 33
+## Item 6 of 35
 
 **Title:** A bare apostrophe in `-a` or `-t` swallows every later field
 
@@ -187,7 +187,7 @@ double-escaping the consumer's").
 
 <!-- BODY END -->
 
-## Item 7 of 33
+## Item 7 of 35
 
 **Title:** An invalid UTF-8 byte truncates a name, and can make `-D` absolute
 
@@ -215,7 +215,7 @@ truncating and logging").
 
 <!-- BODY END -->
 
-## Item 8 of 33
+## Item 8 of 35
 
 **Title:** Ripping a disc image at any paranoia level above 0 returns corrupted audio and reports `Ripping errors: 0`
 
@@ -328,7 +328,7 @@ with image size.
 
 <!-- BODY END -->
 
-## Item 9 of 33
+## Item 9 of 35
 
 **Title:** `-r` reaches libcdio-paranoia unrounded, and `-r 3` never returns on a bad sector
 
@@ -357,7 +357,7 @@ there.
 
 <!-- BODY END -->
 
-## Item 10 of 33
+## Item 10 of 35
 
 **Title:** `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
 
@@ -379,7 +379,7 @@ says").
 
 <!-- BODY END -->
 
-## Item 11 of 33
+## Item 11 of 35
 
 **Title:** The AccurateRip tally counts a track whose read was interrupted
 
@@ -402,7 +402,7 @@ in a real rip.
 
 <!-- BODY END -->
 
-## Item 12 of 33
+## Item 12 of 35
 
 **Title:** A 450 lookup falls through to the whole-track checksum on a miss
 
@@ -432,7 +432,7 @@ fork's copy of the same code.
 
 <!-- BODY END -->
 
-## Item 13 of 33
+## Item 13 of 35
 
 **Title:** The AccurateRip disc status can never read `mismatch`
 
@@ -479,7 +479,7 @@ of the fetch, unchanged, so a recorded response can be tested with no network
 
 <!-- BODY END -->
 
-## Item 14 of 33
+## Item 14 of 35
 
 **Title:** A one-frame AccurateRip entry under the threshold is logged as `(not found)`
 
@@ -519,7 +519,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
 
 <!-- BODY END -->
 
-## Item 15 of 33
+## Item 15 of 35
 
 **Title:** A track's success line ignores paranoia's skips and a `-Z` repeat limit
 
@@ -569,7 +569,7 @@ repeat limit as read with errors").
 
 <!-- BODY END -->
 
-## Item 16 of 33
+## Item 16 of 35
 
 **Title:** A failed track ends a rip of every track silently, and the album is finalised over it
 
@@ -611,7 +611,7 @@ under `-l`.
 
 <!-- BODY END -->
 
-## Item 17 of 33
+## Item 17 of 35
 
 **Title:** A stopped `-f` search is retried with a larger radius
 
@@ -660,7 +660,7 @@ was, and end a -f search on a stop").
 
 <!-- BODY END -->
 
-## Item 18 of 33
+## Item 18 of 35
 
 **Title:** The footer can count a one-frame match the track's lines never printed
 
@@ -705,7 +705,7 @@ match in the footer only where the track's line says so").
 
 <!-- BODY END -->
 
-## Item 19 of 33
+## Item 19 of 35
 
 **Title:** A disc image is taken for a drive with libcdio 2.3.0 or later
 
@@ -757,7 +757,7 @@ driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 <!-- BODY END -->
 
-## Item 20 of 33
+## Item 20 of 35
 
 **Title:** `-Y` on a directory overflows a signed length
 
@@ -797,7 +797,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 21 of 33
+## Item 21 of 35
 
 **Title:** A failed read in `-Y` is reported as a log with no checksum
 
@@ -834,7 +834,7 @@ as an I/O error, not as one without a checksum").
 
 <!-- BODY END -->
 
-## Item 22 of 33
+## Item 22 of 35
 
 **Title:** The paranoia counters are printed with `%lu` from `uint64_t`
 
@@ -877,7 +877,7 @@ build found this.
 
 <!-- BODY END -->
 
-## Item 23 of 33
+## Item 23 of 35
 
 **Title:** Three start-up failures return without tearing the context down
 
@@ -936,7 +936,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 24 of 33
+## Item 24 of 35
 
 **Title:** An argument that is only its separator crashes with no message
 
@@ -978,7 +978,7 @@ giving the fork's argument probe a malformed-shape axis; it had no report until
 
 <!-- BODY END -->
 
-## Item 25 of 33
+## Item 25 of 35
 
 **Title:** A number past `INT_MAX` wraps and is used
 
@@ -1029,7 +1029,7 @@ fork's argument probe.
 
 <!-- BODY END -->
 
-## Item 26 of 33
+## Item 26 of 35
 
 **Title:** The AccurateRip tally divides by a count that includes data tracks
 
@@ -1069,7 +1069,7 @@ answering Platterpus's question.
 
 <!-- BODY END -->
 
-## Item 27 of 33
+## Item 27 of 35
 
 **Title:** A value the log echoes can start a line of its own
 
@@ -1116,7 +1116,7 @@ keep the value as it came. Found on 2026-10-26 by a review of the fork.
 
 <!-- BODY END -->
 
-## Item 28 of 33
+## Item 28 of 35
 
 **Title:** A path over 1,003 bytes is cut there, extension and all
 
@@ -1164,7 +1164,7 @@ the log, the CUE sheet and both tracks, each under its own name. Found on
 
 <!-- BODY END -->
 
-## Item 29 of 33
+## Item 29 of 35
 
 **Title:** `C2 errors: unsupported by drive` is printed for a disc image, and for a drive that returns C2 pointers
 
@@ -1282,7 +1282,7 @@ failure, which unchanged [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/6
 
 <!-- BODY END -->
 
-## Item 30 of 33
+## Item 30 of 35
 
 **Title:** A disc change mid-rip is reported as `Error ripping: Invalid argument`
 
@@ -1394,7 +1394,7 @@ Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) and ru
 
 <!-- BODY END -->
 
-## Item 31 of 33
+## Item 31 of 35
 
 **Title:** `Embedded cover art:` names the cover that was asked for, not what the file holds
 
@@ -1511,7 +1511,7 @@ In upstream's code there are two steps.
 
 <!-- BODY END -->
 
-## Item 32 of 33
+## Item 32 of 35
 
 **Title:** A cover whose codec parameters carry extradata, such as an AVIF, aborts the rip with a double free
 
@@ -1714,7 +1714,7 @@ offsets only. Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/6
 
 <!-- BODY END -->
 
-## Item 33 of 33
+## Item 33 of 35
 
 **Title:** A failed AccurateRip query can print a line holding only `!`, and log `AccurateRip: disabled`
 
@@ -1811,6 +1811,316 @@ interface, and the unset status the same day, while this report was drafted.
 
 ---
 *Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fork has not fixed this one yet.*
+
+<!-- BODY END -->
+
+## Item 34 of 35
+
+**Title:** A JPEG XL cover, and four other formats, are saved under an extension no muxer takes, stopping the rip before its first track
+
+<!-- BODY START -->
+
+**Where:** `src/coverart.c:280-302` at [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), in `demux_image()`, which
+picks the extension the cover is saved under:
+
+```c
+    /* Output extension guesswork */
+    av_freep(&art->extension);
+    if (art->params->codec_id == AV_CODEC_ID_MJPEG) {
+        art->extension = av_strdup("jpg");
+    ...
+    } else if (art->params->codec_id == AV_CODEC_ID_WEBP) {
+        art->extension = av_strdup("webp");
+    } else if (art->params->codec_id != AV_CODEC_ID_NONE) {
+        art->extension = av_strdup(avcodec_get_name(art->params->codec_id));
+    } else {
+```
+
+and `:49-53`, in `crip_save_art()`, which opens a muxer for that file:
+
+```c
+    ret = avformat_alloc_output_context2(&avf, NULL, NULL, ffpath);
+    if (ret < 0) {
+        cyanrip_log(ctx, 0, "Unable to init lavf context: %s!\n", av_err2str(ret));
+        goto fail;
+    }
+```
+
+**What happens:** a codec the list does not name is saved under its codec's
+name, `jpegxl` for a JPEG XL cover. Given no format, as here,
+`avformat_alloc_output_context2()` picks the muxer by the file's extension,
+and FFmpeg 6.1.1 has none for `.jpegxl`. Of its 189 muxers, as `ffmpeg -h
+muxer=<name>` lists their extensions, none lists `jpegxl`; the image muxer,
+`image2`, lists `jxl`. So the call fails with `Invalid argument`.
+
+- **The rip stops before its first track.** An album cover is saved for each
+  output before any track is read (`src/cyanrip_main.c:2197-2216`), and a
+  failed save goes to `end` (`:2210-2213`). So the rip exits 1 with no track
+  written, whatever the output: `-o wav` too, though WAV embeds no cover.
+- **The log has no footer.** The `goto end` skips it, as item 3 says, so the
+  log file stops at `Unable to init lavf context: Invalid argument!`, with no
+  `Ripping errors:` line.
+
+JPEG XL is not the only one. The same fallback names a Targa cover
+`Front.targa`, a JPEG 2000 cover `Front.jpeg2000`, a Sun Raster cover
+`Front.sunrast` and a JPEG-LS cover `Front.jpegls`, and each of those rips
+exits 1 the same way. An SGI and a PCX cover, whose codec names are
+extensions `image2` lists, are saved, and the rip exits 0. One name in the
+list itself, `heif` for an HEVC cover (`:292-293`), is listed by none of
+FFmpeg 6.1.1's muxers either. No HEVC cover was made to try it.
+
+**How to reproduce:** on a build of [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), against FFmpeg 6.1.1 and
+libcdio 2.1.0, with the two-track image from item 29 and the 8x8 PNG cover
+from item 31. Make a JPEG XL cover from the PNG, which `ffprobe` then gives
+as `codec_name=jpegxl`:
+
+```
+ffmpeg -v error -y -i art.png -frames:v 1 art.jxl
+```
+
+Then:
+
+```
+cyanrip -d disc.cue -N -A -U -s 0 -o wav -C Front=art.jxl
+```
+
+After the usual start-up report, its output ends:
+
+```
+Gaps:
+    None signalled
+
+Cover art destination(s):
+    Unknown disc (ONPX) [WAV]/Front.jpegxl
+Unable to init lavf context: Invalid argument!
+```
+
+and it exits 1. Its folder holds the log file and a CUE sheet that names no
+track. `-o flac` stops the same way. The same command with `art.png` saves
+`Front.png`, rips both tracks and exits 0. For the other four, make
+`art.tga`, `art.j2k`, `art.ras` or `art.jls` from `art.png` the same way;
+`ffprobe` gives them as `targa`, `jpeg2000`, `sunrast` and `jpegls`.
+
+**Fixed in the fork in part:** [`7eb7f28`](https://github.com/rmccann-hub/cyanrip/commit/7eb7f28) ("Save a JPEG XL cover as .jxl so the
+rip no longer fails", 2026-11-16):
+
+- It adds JPEG XL to the list, as `jxl`.
+- The fork's cover test now rips with each picture it loads, under `-o wav`,
+  and checks that one file is saved and reads back as the same codec. Its
+  pictures are a PNG and an AVIF, and a JPEG, GIF, BMP, TIFF, WebP and JPEG
+  XL where the test's `ffmpeg` can make them.
+- Run as above, the fork saves `Front.jxl`, rips both tracks and exits 0.
+  Under `-o flac` it refuses the cover before the rip, with exit 64. FFmpeg
+  6.1.1's FLAC muxer does not keep a JPEG XL picture, and the fork's fix for
+  item 31 ([`443cbeb`](https://github.com/rmccann-hub/cyanrip/commit/443cbeb)) refuses a cover an output cannot hold.
+
+That fix reaches JPEG XL alone. The other four were found while this report
+was drafted, on 2026-11-26. They fail the same way in the fork's work of that
+day ([`759e736`](https://github.com/rmccann-hub/cyanrip/commit/759e736)), which has not fixed them yet.
+
+In upstream's code, [`7eb7f28`](https://github.com/rmccann-hub/cyanrip/commit/7eb7f28)'s change is one more case in the list:
+
+```c
+    } else if (art->params->codec_id == AV_CODEC_ID_JPEGXL) {
+        art->extension = av_strdup("jxl");
+```
+
+Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) and run:
+
+- The command above saves `Front.jxl`, byte-identical to `art.jxl`, rips both
+  tracks and exits 0.
+- With `-o flac` it exits 0 too, but the FLAC file holds no picture while the
+  track's block lists `Front: 8x8 JPEG XL`. That is item 31.
+- With four more cases the same way, `tga` for `AV_CODEC_ID_TARGA`, `j2k` for
+  `AV_CODEC_ID_JPEG2000`, `ras` for `AV_CODEC_ID_SUNRAST` and `jls` for
+  `AV_CODEC_ID_JPEGLS`, each of the other four covers is saved byte-identical
+  to its source, and the rip exits 0.
+
+A codec missing from the list would still fall to its name. Checking the
+name with `av_guess_format()` when the cover is loaded would refuse such a
+cover before the rip; that was not tried.
+
+---
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fork's fix for part of this is linked above; the rest is not fixed there yet.*
+
+<!-- BODY END -->
+
+## Item 35 of 35
+
+**Title:** `-f` never tests an offset of 0, and asks libcdio for each track by its position
+
+<!-- BODY START -->
+
+**Where:** `src/cyanrip_main.c:513` and `:529` at [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), in
+`search_for_offset()`:
+
+```c
+    if (guess) {
+        const uint8_t *start_addr = mem + guess*4;
+```
+
+```c
+        int offset = dir * (byte_off >> 2);
+        if (guess == offset)
+            continue;
+```
+
+and `:557-560` and `:576`, in `search_for_drive_offset()`:
+
+```c
+        lsn_t start = cdio_get_track_lsn(ctx->cdio, t_idx + 1);
+        lsn_t end = cdio_get_track_last_lsn(ctx->cdio, t_idx + 1);
+
+        if (ctx->tracks[t_idx].ar_db_status != CYANRIP_ACCUDB_FOUND)
+```
+
+```c
+        cyanrip_log(ctx, 0, "Loading data for track %i...\n", t_idx + 1);
+```
+
+**What happens:** two things.
+
+1. **An offset of 0 is never tested.** Each track is searched one way, then,
+   if that finds nothing, the other (`:593-597`). The first search's guess is
+   the offset found so far, which is 0 until one is found; the second's is 0.
+   A guess is tested only when it is not 0 (`:513`), and the scan skips the
+   guess (`:529`), so neither search tests 0. When the
+   offset that matches is 0, as it is for a drive that needs none, every track
+   finds nothing. The radius then doubles from 6 frames (`:632-634`) until no
+   track is long enough, and the search ends `No track was long enough, unable
+   to find drive offset!`, exit 1.
+2. **Each track is asked for by its position, not its number.** The track
+   whose AccurateRip entry is compared, `ctx->tracks[t_idx]`, is the disc's
+   track `first_track_nb + t_idx` (`:306`). Its sectors are asked for as track
+   `t_idx + 1`, which is the same track only on a disc numbered from 1.
+   - On a CUE sheet numbered from 3, whose numbers libcdio 2.1.0 keeps, the
+     search passes over the first position without a line. It then prints
+     `Loading data for track 2...`, a track the disc does not have, and reads
+     from sector -44857. That is libcdio's `CDIO_INVALID_LSN`, -45301, plus
+     the 444 that `:571` adds at a radius of 6.
+   - libcdio-paranoia's cdda library adds `Unable to access sector -44857:
+     skipping...` to its messages again and again, and the search prints
+     nothing more.
+   - A stop is checked only after a frame's read returns (`:582`), so a SIGINT
+     prints `Trying to quit` and the search keeps running.
+   - Read from the code, not reached here: the third position would read track
+     3, the disc's first, against track 5's entry.
+   - The lines that name a track (`:576`, `:600`, `:605`, `:610`, `:614`)
+     give its position plus 1, not its number.
+
+**How to reproduce:** on a build of [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), against libcdio 2.1.0 and
+libcdio-paranoia 10.2+2.0.1. No image is in AccurateRip's database, so a
+preload library answers libcurl instead. It overrides three functions:
+
+- `curl_easy_setopt()` keeps the write callback and its data, appends the URL
+  to a file, and calls libcurl's.
+- `curl_easy_perform()` hands the write callback the bytes of a file, and
+  returns `CURLE_OK`; with no file, it returns `CURLE_HTTP_RETURNED_ERROR`.
+- `curl_easy_getinfo()` answers `application/octet-stream` for
+  `CURLINFO_CONTENT_TYPE`, and calls libcurl's otherwise.
+
+The disc is three copies of one 8-second track of pink noise:
+
+```
+ffmpeg -f lavfi -i "anoisesrc=duration=8:color=pink:sample_rate=44100:seed=1" -ac 2 -f s16le -acodec pcm_s16le track.bin
+cat track.bin track.bin track.bin > offset1.bin
+```
+
+`offset1.cue` has `FILE "offset1.bin" BINARY` and tracks 01 to 03, with
+`INDEX 01` at `00:00:00`, `00:08:00` and `00:16:00`. `offset3.cue` is the same
+numbered 03 to 05, over a copy named `offset3.bin`.
+
+The entry comes from a rip. With the library loaded and no file to serve,
+`cyanrip -d offset1.cue -N -U -s 0 -P 0 -o wav` asks for
+`dBAR-003-00000e10-00002ee1-0c001803.bin` and prints `Accurip 450:
+82EB50A3` for each track. The entry served is a file in that format, with
+those three disc IDs and three track entries. Each has confidence 5, a
+whole-track checksum no rip gives, and `82EB50A3`. The same rip at `-s 6`
+prints `EF33BB38`, for a second entry.
+
+Then, with the `-s 0` entry served:
+
+```
+cyanrip -d offset1.cue -f -P 0
+```
+
+It tries radii of 6, 12, 24, 48 and 96 frames, finds nothing for any track,
+and ends:
+
+```
+Was not able to find drive offset with a radius of 96 frames, trying again with a larger radius...
+No track was long enough, unable to find drive offset!
+```
+
+with exit 1. With the `-s 6` entry, the same command ends `Drive offset of +6
+found (confidence: 3)!`, exit 0.
+
+A gdb `dprintf` on `crip_find_ar()`, with the `-s 0` entry, shows that 0 is
+never tested. It logged each 450-frame checksum the first pass over track 1
+tested, at a radius of 6 frames: 7,054, 3,527 each way.
+
+- Mapped back to the sample offset of the image's own frames that gives each,
+  6,467 are every offset from -3527 to +2940 except 0, each once.
+- Offset 0's checksum, `82EB50A3`, the entry's, is not among them.
+- The other 587 are the first scan's offsets +2941 to +3527, by their place in
+  the trace. They map to no offset because their reads run past the end of
+  the buffer `:550` allocates, twice the radius in frames. valgrind reports
+  them as invalid reads at `:535` into that block. That over-read is a
+  separate defect, which the fork has too, and is not this report's.
+
+With `offset3.cue` and either entry, `-f -P 0` prints:
+
+```
+Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...
+Checking offset3.bin for cdrom...
+
+Opening drive...
+Loading data for track 2...
+```
+
+and nothing more. One SIGINT after 30 s printed `Trying to quit`, and the
+process was still running 30 s later, when it was killed. A backtrace taken
+30 s into another such run goes from `search_for_drive_offset()` at `:579`
+through `cyanrip_read_frame()` at `:486`, `cdio_paranoia_read_limited()` and
+`cdio_cddap_read_timed()` to `__strncat_chk()`, appending to the cdda
+library's messages: `010: Unable to access sector -44857: skipping...`, over
+and over. At the default paranoia level, the same command printed nothing
+more in 120 s.
+
+**The other runs of [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) above used `-P 0`.** At the default paranoia level,
+its rips of these images read frames 1 to 599 of each track as zeros, frame 0
+alone matching the image. So each track's `Accurip 450:` is `00000000`, and
+`-f` with the `-s 6` entry finds nothing. That is consistent with item 8,
+paranoia's cache model of one sector on image drivers, but these runs did not
+diagnose it.
+
+**What the fork did:** [`8610f3c`](https://github.com/rmccann-hub/cyanrip/commit/8610f3c) ("Find an offset of 0, and each track by its
+own number, in -f", 2026-11-16):
+
+- `search_for_offset()` tests its guess whatever it is, 0 included.
+- `search_for_drive_offset()` asks libcdio for `t->cd_track_number`, passes
+  over a track whose start or end libcdio gives as `CDIO_INVALID_LSN`, and
+  names each track by `t->number`.
+- A test serves an entry through a preload library. It finds +0 and +6 on a
+  disc numbered from 1, and +0 on one numbered from 3.
+
+The fork's build of 2026-11-26 ([`759e736`](https://github.com/rmccann-hub/cyanrip/commit/759e736)), at its default paranoia level,
+finds +0 and +6 from both sheets above, and loads tracks 3, 4 and 5 from
+`offset3.cue`.
+
+In upstream's code the change is the same:
+
+- Test the guess at `:513` whatever it is.
+- Ask for `t->cd_track_number` at `:557-558`.
+- At `:565`, pass over a track whose start or end is `CDIO_INVALID_LSN`.
+- Log `t->number` at `:576`, `:600`, `:605`, `:610` and `:614`.
+
+Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) by hand and run at `-P 0`, it finds +0 and +6 from both
+sheets, each with confidence 3 and exit 0, and loads tracks 3, 4 and 5 from
+`offset3.cue`.
+
+---
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 

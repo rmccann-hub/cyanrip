@@ -16,12 +16,12 @@
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Generate docs/upstream/issues-to-file.md: the thirty-three upstream bug
+"""Generate docs/upstream/issues-to-file.md: the thirty-five upstream bug
 reports, rendered as issues ready to paste into cyanreg/cyanrip's tracker.
 
 The reports themselves are written in two files, and this renders them:
 
-  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-33;
+  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-35;
   * `docs/upstream-cachemodel-report.md`, report 8.
 
 It exists because filing is the maintainer's act, done in a browser, and a
@@ -64,7 +64,7 @@ FORK = "https://github.com/rmccann-hub/cyanrip"
 UPSTREAM = "https://github.com/cyanreg/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
-COUNT = 33
+COUNT = 35
 # Where the operator filed the first FILED_COUNT, as one issue, on 2026-10-16.
 # The rest are drafted and not filed, and the header says so.
 FILED_COUNT = 23
@@ -77,10 +77,18 @@ FILED = f"{UPSTREAM}/issues/167"
 # from the reports, so the footer cannot claim a check nobody made.
 HEADER_AT = re.compile(r"\*\*Checked against upstream `master` at `([0-9a-f]{7})`")
 # Whether the fork has fixed a report's defect, read from the label of the
-# report's last section: the footer said "The fix is linked above" of every
-# item, and report 33's defect is the fork's too, unfixed.
+# report's last section, and what the footer says of it: the footer said "The
+# fix is linked above" of every item, though report 33's defect is the fork's
+# too, unfixed, and report 34's fix reaches one of its five covers.
 FIXED_LABEL = "**What the fork did:**"
 UNFIXED_LABEL = "**Not fixed in the fork yet:**"
+PARTIAL_LABEL = "**Fixed in the fork in part:**"
+FOOTER = {
+    FIXED_LABEL: "The fix is linked above; happy to open a PR if it helps.*",
+    PARTIAL_LABEL: ("The fork's fix for part of this is linked above; the "
+                    "rest is not fixed there yet.*"),
+    UNFIXED_LABEL: "The fork has not fixed this one yet.*",
+}
 WHERE_AT = re.compile(r"\A\*\*Where:\*\*[^\n]* at `([0-9a-f]{7})`")
 # The upstream commit a rendered file's links were resolved against.
 PINNED_AT = re.compile(
@@ -161,21 +169,19 @@ def render(ref, short):
             sys.exit(f"gen-upstream-issues: report {n} appears twice in "
                      f"{DEFECTS}")
         w = WHERE_AT.search(body)
-        labels = [lab for lab in (FIXED_LABEL, UNFIXED_LABEL)
-                  if f"\n{lab}" in body]
+        labels = [lab for lab in FOOTER if f"\n{lab}" in body]
         if len(labels) != 1:
             sys.exit(f"gen-upstream-issues: report {n} must carry exactly one "
-                     f"of {FIXED_LABEL} and {UNFIXED_LABEL}, at a line's "
-                     f"start; it carries {len(labels)}")
-        issues[n] = (title, body, w.group(1) if w else checked_at,
-                     labels[0] == FIXED_LABEL)
+                     f"of {', '.join(FOOTER)}, at a line's start; it carries "
+                     f"{len(labels)}")
+        issues[n] = (title, body, w.group(1) if w else checked_at, labels[0])
     m = re.search(r"(?ms)^## Title\s*\n+(.+?)\n\s*\n## Body", cm)
     if not m or 8 in issues:
         sys.exit(f"gen-upstream-issues: report 8 is {CACHEMODEL}'s, and "
                  f"that file must carry a '## Title' then a '## Body'")
     # Report 8 is its own file, whose body ends naming the fork's fix
     issues[8] = (m.group(1).strip(), cm.split("\n## Body", 1)[1].strip(),
-                 checked_at, True)
+                 checked_at, FIXED_LABEL)
     if sorted(issues) != list(range(1, COUNT + 1)):
         sys.exit(f"gen-upstream-issues: expected reports 1-{COUNT}, found "
                  f"{sorted(issues)}")
@@ -220,13 +226,10 @@ def render(ref, short):
         "process with the drive held), 4 and 5 (`-H` silently drops "
         "de-emphasis and the log claims it), then the rest.", ""]
     for n in range(1, COUNT + 1):
-        title, body, at, fixed = issues[n]
+        title, body, at, label = issues[n]
         footer = ("\n\n---\n*Found in the fork `rmccann-hub/cyanrip` (branch "
                   "`platterpus-fork`), which feeds the Platterpus ripper. "
-                  f"Checked against `master` at `{at}`. "
-                  + ("The fix is linked above; happy to open a PR if it "
-                     "helps.*" if fixed else
-                     "The fork has not fixed this one yet.*"))
+                  f"Checked against `master` at `{at}`. " + FOOTER[label])
         out += [f"## Item {n} of {COUNT}", "",
                 f"**Title:** {title.replace('**', '')}", "",
                 "<!-- BODY START -->", "", link_commits(body, ref) + footer, "",

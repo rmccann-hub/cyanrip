@@ -103,14 +103,14 @@ commit of ours added it; ours touch it only later (`81eedbf8`, `ed50558d`).
 ## 2. Fixes upstream could take
 
 The reports are in `docs/upstream/defect-reports.md`; report 8 is
-`docs/upstream-cachemodel-report.md`. Reports 1 to 33 are rendered for upstream's
+`docs/upstream-cachemodel-report.md`. Reports 1 to 35 are rendered for upstream's
 tracker in `docs/upstream/issues-to-file.md`. The operator says 1 to 23 were filed on
-2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 33 are
-drafted and not filed (UP-1, OW-8). Reports 1 to 28 had a check row in
+2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 35 are
+drafted and not filed (OW-8). Reports 1 to 28 had a check row in
 `docs/SETTLED.md`'s upstream section when this list was made, and all of that
 section's rows passed against `648b1dd` on 2026-11-16; 29 to 31 gained theirs
 the same day, each run against upstream's tree and ours, 32 its own
-the same day, and 33 its own on 2026-11-17.
+the same day, 33 its own on 2026-11-17, and 34 and 35 theirs on 2026-11-26.
 
 **Retire when** a report's check fails against a synced `origin/master`: upstream
 has changed that code. At that sync, read upstream's fix, keep one, and delete
@@ -140,12 +140,14 @@ the row.
 | 14 | A one-frame entry under the threshold is logged as `(not found)` | `b1857d6` |
 | 18 | The footer can count a one-frame match the track's lines never printed | `8ab9a8d` |
 | 26 | The tally divides by a count that includes data tracks | `779549a` |
+| 35 | `-f` never tests an offset of 0, and asks for each track by its position, so on a disc numbered from 3 it reads sector -44857 until killed (`src/cyanrip_main.c:513`, `:529`, `:557-558` at `648b1dd`) | `8610f3c1` |
 | | **Arguments, names and paths** | |
 | 6 | A bare apostrophe in `-a` or `-t` swallows every later field | `c59dea3` |
 | 7 | An invalid UTF-8 byte truncates a name, and can make `-D` absolute | `c3482b0` |
 | 24 | An argument that is only its separator crashes with no message | `58f5151` |
 | 25 | A number past `INT_MAX` wraps and is used | `716a99b` |
 | 28 | A path over 1,003 bytes is cut there, extension and all | `cfd738e` |
+| 34 | A cover is saved under its codec's name when the extension list lacks it, which no muxer takes, so the rip stops before its first track (`src/coverart.c:296-297` at `648b1dd`) | `7eb7f28d` for JPEG XL only; Targa, JPEG 2000, Sun Raster and JPEG-LS still fail here |
 | | **What the log says** | |
 | 27 | A value the log echoes can start a line of its own | `46cec2a` |
 | 29 | `C2 errors: %s by drive` is printed from libcdio's capability bit (`src/cyanrip_log.c:275` at `648b1dd`) | `372706fe` |
