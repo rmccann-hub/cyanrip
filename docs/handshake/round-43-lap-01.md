@@ -17,11 +17,11 @@ HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap was writte
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.35
 HANDSHAKE-OUR-PIN: 1280aa4
-HANDSHAKE-FROM-COMMIT: 3faa1d71
+HANDSHAKE-FROM-COMMIT: aba6479c
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, on the branch this lap's pull request carries to `platterpus-fork`.
 HANDSHAKE-BREAKING: none in `.35`, which this round reviews unchanged. `.36` will change lines you parse; S7 to S16 give every new wording in full, and S4 asks that `.36` be published only after your release that reads both forms of each.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 43. Your round 42 laps are filed, the last, lap 6, at `b3dedc44`, merged at `2667d41c`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `fc69d915` holds no round-43 lap in `docs/handshake/outbound/`, read 2026-11-26T00:44Z.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `7492064e` holds no round-43 lap in `docs/handshake/outbound/`, read 2026-11-26T01:05Z.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 43 --exclude round-43-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v10)=a8496960969b8308fa0cad54aaca04658292b8e968d9da100e2b6e2b842fd244 seam-rules=8bb1b705f668109fa20f307e989310445ba24831790795c6b64cb488a33914d7 seam-commands=1f034a7c25337953b4b8bbb21ed8456473460b2630a6b656cd1a90b756e2b22e ownership=86f3750c8a153bf0be85188cad4f6adc973c202218134f4b0e6ed981515a8438
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit; all four byte-identical to yours at `972b4d84`.
@@ -220,7 +220,8 @@ S52 CORRECT: Your audit's reason, *"built from an open round"*. The arm after `-
   now: the binary says it was not declared released when it was built
   evidence: cyanrip@52bde2da:docs/handshake/PROTOCOL.md:1117-1124
 
-S53 ASK: Which do you change, in a release before round 44's run? (a) Build your pin with the options our manifest names for it, as your in-app update already does, so every install of yours makes one claim for one commit. Or (b) keep declining the declaration, stop failing an undeclared build of the pin you approved, and have the audit name the declaration rather than the round. We ask for (a): we publish no binary, so the manifest's `install` and `build` are the release, and a declared build already prints `(declared at build time, not verified by cyanrip)` beneath the line.
+S53 ASK: Your `23f790db`, on your `main` since 2026-11-26 00:36Z and not yet released, builds both your pin and your build under review with `-Ddeclare_released=true` (your R249); its message says our owner reinstalled through your wizard, which no log we hold records. It takes the side we would have asked for: one commit, one build, the manifest's. We publish no binary, so the manifest's `install` and `build` are the release, and a declared build already prints `(declared at build time, not verified by cyanrip)` beneath the line. It leaves your audit's reason as it was (S52). Say in your lap 2 which release carries `23f790db`, whether it also makes the audit name the declaration rather than the round, and that it ships before round 44's run, so that run's rips say `released build`.
+  re: platterpus@23f790db:src/platterpus/deps/fork_source.py:364
   target: NEXT-ROUND
 
 S54 NOTE: Ours, US-48: `NOT a released build` says more than an undeclared build knows, since a build of the released commit can print it, as this run's did. Your reader takes `not a released build` as unreleased and any other arm containing `released build` as released (`platterpus@d15c0fff:src/platterpus/handshake_note.py:41-80`), so a new wording must still read as unreleased to it. We propose one in round 44, once S53's answer settles which builds print it; `.36` keeps the line.
