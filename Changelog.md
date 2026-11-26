@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**US-20 closed: the README states ReplayGain's memory as measured.** A 74-minute image of white noise, FLAC's worst case at 725 MB of output, ripped from `.35`'s source peaked at 905.3 MiB resident at the defaults and 161.6 MiB with `-K` (`ru_maxrss` of the cyanrip process). `SETTLED.md`'s resource row gains the method it lacked; US-20's other lead was closed on 2026-11-25.
+
 **Round 43's second run filed and read** (`docs/rig-2026-11-26-1280aa4/`, evidence `ebedeac`, 228 files and manifest rows). It is our owner's second Full acceptance of `.35` through Platterpus 0.7.130, on 2026-11-26 from 00:58:46Z.
 
 - **The verdict.** Step for step the first run's: pass 531, fail 8, unreachable 128. Every failure is again Platterpus's audit on `-- NOT a released build` (R43-13).
